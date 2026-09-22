@@ -1,21 +1,34 @@
 import Loading from "@/components/Loading";
 import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { axiosInstance } from "@/lib/axios";
 import { useAuth } from "@/stores/useAuth";
 import type { Blog } from "@/types/blog";
+import type { PaginationResponse } from "@/types/pagination";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 function HomePage() {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [blogs, setBlogs] = useState<PaginationResponse<Blog> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(1);
 
   const { user, logout } = useAuth();
 
   const getBlogs = async () => {
     try {
-      const { data } = await axiosInstance.get<Blog[]>(
-        "/data/Blogs?sortBy=%60created%60%20desc",
+      const { data } = await axiosInstance.get<PaginationResponse<Blog>>(
+        "/posts",
+        {
+          params: { page: page },
+        },
       );
       setBlogs(data);
     } catch (error) {
@@ -25,9 +38,27 @@ function HomePage() {
     }
   };
 
+  const handlePrev = () => {
+    const currentPage = blogs?.meta.page || 1;
+    if (currentPage > 1) {
+      setPage(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    const currentPage = blogs?.meta.page || 1;
+    const total = blogs?.meta.total || 0;
+    const take = blogs?.meta.take || 0;
+    const totalPage = Math.ceil(total / take);
+
+    if (currentPage < totalPage) {
+      setPage(currentPage + 1);
+    }
+  };
+
   useEffect(() => {
     getBlogs();
-  }, []);
+  }, [page]);
 
   return (
     <div>
@@ -57,7 +88,7 @@ function HomePage() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-16">
-          {blogs.map((blog) => {
+          {blogs?.data.map((blog) => {
             return (
               <Link key={blog.objectId} to={`/blogs/${blog.objectId}`}>
                 <div className="border border-black p-8">
@@ -70,6 +101,22 @@ function HomePage() {
           })}
         </div>
       )}
+
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem onClick={handlePrev}>
+            <PaginationPrevious />
+          </PaginationItem>
+
+          <PaginationItem>
+            <PaginationLink>{blogs?.meta.page || 1}</PaginationLink>
+          </PaginationItem>
+
+          <PaginationItem onClick={handleNext}>
+            <PaginationNext />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }
