@@ -24,7 +24,7 @@ const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: "/blogs/:objectId",
+    path: "/blogs/:slug",
     element: <BlogDetail />,
   },
   {
