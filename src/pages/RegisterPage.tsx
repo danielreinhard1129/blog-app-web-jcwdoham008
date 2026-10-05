@@ -1,40 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { axiosInstance } from "@/lib/axios";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import useRegister from "@/hooks/api/auth/useRegister";
 import { registerSchema, type RegisterSchema } from "@/schemas/register";
-import { useNavigate } from "react-router";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 function RegisterPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const { register, handleSubmit, formState } = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
   });
 
-  const navigate = useNavigate();
+  const { mutate, isPending } = useRegister();
 
   const handleRegister = async (values: RegisterSchema) => {
-    setIsLoading(true);
-    try {
-      await axiosInstance.post("/auth/register", {
-        name: values.name,
-        email: values.email,
-        password: values.password,
-      });
-
-      alert("Register Success!");
-
-      navigate("/login");
-    } catch (error) {
-      console.log(error);
-      alert("Register Failed!");
-    } finally {
-      setIsLoading(false);
-    }
+    mutate(values);
   };
 
   return (
@@ -66,8 +46,8 @@ function RegisterPage() {
           </p>
         )}
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Loading" : "Submit"}
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Loading" : "Submit"}
         </Button>
       </div>
     </form>
