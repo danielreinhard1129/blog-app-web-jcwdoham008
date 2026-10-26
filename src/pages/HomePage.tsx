@@ -1,11 +1,10 @@
-import GlobalPagination from "@/components/GlobalPagination";
-import Loading from "@/components/Loading";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Footer from "@/components/Footer";
+import BlogListSection from "@/components/HomePage/BlogListSection";
+import HeroSection from "@/components/HomePage/HeroSection";
+import Navbar from "@/components/Navbar";
 import useGetPosts from "@/hooks/api/post/useGetPosts";
 import { useAuth } from "@/stores/useAuth";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { Link } from "react-router";
 import { useDebounceValue } from "usehooks-ts";
 
 function HomePage() {
@@ -13,73 +12,57 @@ function HomePage() {
   const [search, setSearch] = useQueryState("search", { defaultValue: "" });
   const [debouncedSearch] = useDebounceValue(search, 700);
 
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
-  const { data: blogs, isPending } = useGetPosts({
+  const {
+    data: blogs,
+    isPending,
+    isError,
+    refetch,
+  } = useGetPosts({
     page,
     search: debouncedSearch,
+    take: 6,
   });
 
+  const handleSearchChange = (value: string) => {
+    setPage(1);
+    setSearch(value);
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const clearSearch = () => {
+    setPage(1);
+    setSearch("");
+  };
+
   return (
-    <div>
-      <div className="flex justify-center items-center h-24">
-        {user ? (
-          <div className="flex items-center gap-4">
-            <h1>Welcome, {user.name}</h1>
-            <Button variant="destructive" onClick={logout}>
-              Logout
-            </Button>
-            <Link to="/write">
-              <Button>Create Blog</Button>
-            </Link>
-          </div>
-        ) : (
-          <div>
-            <Link to="/login">
-              <Button>Login Here</Button>
-            </Link>
-          </div>
-        )}
-      </div>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <Navbar />
 
-      <div className="max-w-2xl mx-auto my-8">
-        <Input
-          placeholder="Search..."
-          onChange={(e) => {
-            setPage(1);
-            setSearch(e.target.value);
-          }}
-          value={search}
+      <main className="flex-1">
+        <HeroSection
+          search={search}
+          onSearchChange={handleSearchChange}
+          onClearSearch={clearSearch}
         />
-      </div>
-
-      {isPending ? (
-        <div className="flex justify-center items-center h-100">
-          <Loading />
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-16">
-          {blogs?.data.map((blog) => {
-            return (
-              <Link key={blog.slug} to={`/blogs/${blog.slug}`}>
-                <div className="border border-black p-8">
-                  <p className="text-lg font-bold">{blog.title}</p>
-                  <p>{blog.description}</p>
-                  <p>{blog.user.name}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
-      {!!blogs?.meta && (
-        <GlobalPagination
-          currentPage={blogs.meta.page}
-          totalPage={Math.ceil(blogs.meta.total / blogs.meta.take)}
-          onChangePage={(p) => setPage(p)}
+        <BlogListSection
+          blogs={blogs}
+          isPending={isPending}
+          isError={isError}
+          search={debouncedSearch}
+          isAuthenticated={!!user}
+          onRetry={() => refetch()}
+          onClearSearch={clearSearch}
+          onPageChange={handlePageChange}
         />
-      )}
+      </main>
+
+      <Footer />
     </div>
   );
 }
