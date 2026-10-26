@@ -1,51 +1,22 @@
-import ButtonLoginGoogle from "@/components/ButtonLoginGoogle";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import useLogin from "@/hooks/api/auth/useLogin";
-import { loginSchema, type LoginSchema } from "@/schemas/login";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import Footer from "@/components/Footer";
+import LoginForm from "@/components/LoginPage/LoginForm";
+import LoginHero from "@/components/LoginPage/LoginHero";
+import Navbar from "@/components/Navbar";
 
 function LoginPage() {
-  const { register, handleSubmit, formState } = useForm<LoginSchema>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const { mutate, isPending } = useLogin();
-
-  const handleLogin = async (values: LoginSchema) => {
-    mutate(values);
-  };
-
   return (
-    <form onSubmit={handleSubmit(handleLogin)}>
-      <div className="w-100 mx-auto mt-20 border border-black p-8 space-y-4">
-        <h1>LoginPage</h1>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <Navbar />
 
-        <Label>Email</Label>
-        <Input type="email" {...register("email")} />
-        {formState.errors.email && (
-          <p className="text-red-500 text-sm">
-            {formState.errors.email.message}
-          </p>
-        )}
+      <main className="flex-1">
+        <section className="mx-auto grid max-w-6xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-20">
+          <LoginHero />
+          <LoginForm />
+        </section>
+      </main>
 
-        <Label>Password</Label>
-        <Input type="password" {...register("password")} />
-        {formState.errors.password && (
-          <p className="text-red-500 text-sm">
-            {formState.errors.password.message}
-          </p>
-        )}
-
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Loading" : "Submit"}
-        </Button>
-
-        <ButtonLoginGoogle />
-      </div>
-    </form>
+      <Footer />
+    </div>
   );
 }
 

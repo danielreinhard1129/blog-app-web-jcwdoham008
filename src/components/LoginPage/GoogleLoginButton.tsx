@@ -1,11 +1,18 @@
+import { Button } from "@/components/ui/button";
 import { axiosInstance } from "@/lib/axios";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/stores/useAuth";
+import { GoogleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
 
-function ButtonLoginGoogle() {
+interface GoogleLoginButtonProps {
+  className?: string;
+}
+
+function GoogleLoginButton({ className }: GoogleLoginButtonProps) {
   const { login } = useAuth();
 
   const navigate = useNavigate();
@@ -26,17 +33,23 @@ function ButtonLoginGoogle() {
         });
 
         navigate("/");
-      } catch (error) {
+      } catch {
         toast.error("Login with Google Failed!");
       }
     },
   });
 
   return (
-    <Button type="button" variant="outline" onClick={() => handleLoginGoogle()}>
-      Login By Google
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => handleLoginGoogle()}
+      className={cn("gap-2", className)}
+    >
+      <HugeiconsIcon icon={GoogleIcon} size={16} data-icon="inline-start" />
+      Continue with Google
     </Button>
   );
 }
 
-export default ButtonLoginGoogle;
+export default GoogleLoginButton;
